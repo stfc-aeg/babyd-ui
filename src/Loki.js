@@ -8,15 +8,16 @@ const ClkgenEndpointDropdown = WithEndpoint(DropdownSelector);
 
 export function StatusBadge(_ref) {
     let label = _ref.label;
-    if (label == null) {
-        console.error('Status Badge requires a label');
-    }
     let type = _ref.type;
     if (type == null) {
         type = "primary";
     }
+    let wrap = _ref.wrap;
+    if (wrap == null) {
+        wrap = false
+    }
 
-    var fullclass = "badge bg-"+type;
+    var fullclass = "badge bg-"+type + " " + (wrap ? "text-wrap" : "");
     return (
         <span class={fullclass}>{label}</span>
     )
@@ -199,10 +200,6 @@ export function LOKILEDDisplay({adapterEndpoint}) {
     // Because it's not present in the device tree currently, any LEDs are assumed to be green.
 
     let ledstates = adapterEndpoint.data?.user_interaction?.leds;
-    console.log('led display update: ');
-    console.log(ledstates);
-    console.log(adapterEndpoint);
-    console.log(adapterEndpoint.data);
 
     let ledrows;
     if (typeof ledstates !== 'undefined') {
@@ -218,9 +215,9 @@ export function LOKILEDDisplay({adapterEndpoint}) {
     return (<TitleCard title="LEDs">{ledrows}</TitleCard>);
 }
 
-export function LOKICarrierInfo({adapterEndpoint, loki_connection_status}) {
+export function LOKICarrierInfo({adapterEndpoint, loki_connection_state}) {
 
-    if (!loki_connection_status) {
+    if (!loki_connection_state) {
         return (<></>)
     }
 
@@ -239,12 +236,13 @@ export function LOKICarrierInfo({adapterEndpoint, loki_connection_status}) {
     )
 }
 
-export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_status}) {
-    if (!loki_connection_status) {
+export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_state, setFoundLoopException}) {
+    if (!loki_connection_state) {
         return (<></>)
     }
 
     let loopstatus = adapterEndpoint.data.carrier_info?.loopstatus;
+    let loop_exception_found = false;
 
     let looprows;
     if (typeof loopstatus !== 'undefined') {
@@ -254,6 +252,11 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_status})
             let looprunning = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.running;
             let loopdone = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.done;
             let loopexception = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.exception;
+
+            if (loopexception != "N/A") {
+                loop_exception_found = true;
+            };
+
             return (
                 <tr>
                     <th scope="row">{loopname}</th>
@@ -268,6 +271,8 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_status})
     } else {
         looprows = null;
     }
+
+    setFoundLoopException(loop_exception_found);
 
     return (
         <TitleCard title="LOKI Carrier Task Status">

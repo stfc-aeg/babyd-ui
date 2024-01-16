@@ -5,12 +5,12 @@ import {useState} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint} from 'odin-react';
+import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint, ToggleSwitch} from 'odin-react';
 import 'odin-react/dist/index.css'
 
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKILEDDisplay, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner} from 'react-bootstrap'
 //import {ArrowRight} from 'react-bootstrap-icons';
 import * as Icon from 'react-bootstrap-icons';
 
@@ -23,6 +23,8 @@ function BabyD() {
     const [loki_connection_ok, set_loki_connection_ok] = useState(true);
     const [asic_enabled, set_asic_enabled] = useState(false);
 
+    const [foundLoopException, setFoundLoopException] = useState(false);
+
     return (
         <OdinApp title="BabyD UI" navLinks={["BabyD Control", "Page Two"]}>
             <Container fluid>
@@ -30,12 +32,17 @@ function BabyD() {
                     <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} set_loki_connection_state={set_loki_connection_ok} />
                 </Row>
                 <Row>
+                    <Alert variant='warning' show={foundLoopException}>
+                        Possible Loop Error in LOKI control unit!
+                    </Alert>
+                </Row>
+                <Row>
                     <Col>
                         <Row>
                             <LOKIClockGenerator adapterEndpoint={staticEndpoint} />
                         </Row>
                         <Row>
-                            <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} />
+                            <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
                         </Row>
                         <Row>
                             <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
@@ -51,7 +58,7 @@ function BabyD() {
             </Container>
             <Container>
                 <Row>
-                    <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} />
+                    <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} set_loki_connection_state={set_loki_connection_ok} />
                 </Row>
                 <Row>
                     <Col>
@@ -59,7 +66,7 @@ function BabyD() {
                             <LOKICarrierInfo adapterEndpoint={staticEndpoint} loki_connection_state={loki_connection_ok}/>
                         </Row>
                         <Row>
-                            <LOKICarrierTaskStatus adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} />
+                            <LOKICarrierTaskStatus adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} setFoundLoopException={setFoundLoopException} />
                         </Row>
                     </Col>
                 </Row>
@@ -69,7 +76,8 @@ function BabyD() {
     )
 }
 
-function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabled, set_asic_enabled}) {
+const MainEndpointButton = WithEndpoint(Button);
+function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabled, set_asic_enabled, foundLoopException}) {
 
     let latest_asic_enabled = adapterEndpoint.data.application?.system_state?.ASIC_EN;
     if (latest_asic_enabled) {
@@ -89,7 +97,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
     return (
         <TitleCard title="BabyD System Status">
             <Container>
-                <Row>
+                <Row class="row align-items-center justify-content-center d-flex">
                     <Col class="col align-self-center">
                         <Card className="text-center" style={{width: '7rem'}}>
                             <Card.Body>
@@ -116,32 +124,42 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                         <Icon.Motherboard  size={30} color={loki_connection_state ? "green" : "red"}/>
                                     </Row>
                                     <Row>
-                                        <span>{loki_connection_state ? "Connected" : "No Con"}</span>
+                                        <StatusBadge label={loki_connection_state ? "Connected" : "No Con"} type={loki_connection_state ? "success" : "danger"} />
+                                    </Row>
+                                    <Row>
+                                        <StatusBadge label={(!foundLoopException && loki_connection_state) ? "" : "Loop Error"} type={loki_connection_state ? "success" : "danger"} />
                                     </Row>
                                 </Card.Text>
                             </Card.Body>
                         </Card>
                     </Col>
                     <Col class="col align-self-center">
-                        <Icon.ArrowRight size={40} color={latest_main_enable ? "green" : "red"}/>
+                        <Row>
+                            <Icon.ArrowRight size={40} color={latest_main_enable ? "green" : "red"}/>
+                        </Row>
                     </Col>
                     <Col class="col align-self-center">
-                        <Card className="text-center" style={{width: '30rem'}}>
+                        <Card className="text-center" border={latest_main_enable ? "success" : "danger"} style={{width: '25rem'}}>
                             <Card.Body>
+                                <Card.Header>
+                                    <Row>
+                                        <MainEndpointButton endpoint={adapterEndpoint} type="click" fullpath="application/system_state/MAIN_EN" value={!(latest_main_enable)}>
+                                            {latest_main_enable && <Icon.Plug size={20} />}
+                                            {!latest_main_enable && <Icon.PlugFill size={20} />}
+                                            {latest_main_enable ? "Disconnect" : "Connect "}
+                                            {!latest_main_enable && <Spinner animation="grow" size="sm" />}
+                                        </MainEndpointButton>
+                                    </Row>
+                                </Card.Header>
                                 <Card.Title>
                                     BabyD
                                 </Card.Title>
                                 <Card.Text>
                                     <Row>
-                                        <Icon.Motherboard  size={30} color={loki_connection_state ? "green" : "red"}/>
+                                        <Icon.Motherboard  size={30} color={latest_main_enable ? "green" : "red"}/>
                                     </Row>
                                     <Row>
-                                        <Col>
-                                            <StatusBox label="Main Enable" type={latest_main_enable ? "success" : "danger"}>{latest_main_enable}</StatusBox>
-                                        </Col>
-                                        <Col>
-                                            <StatusBox label="Can Disconnect?" type={adapterEndpoint.data.application?.system_state?.DISCONNECT_OK ? "success" : "danger"}>{adapterEndpoint.data.application?.system_state?.DISCONNECT_OK ? "Safe" : "NO"}</StatusBox>
-                                        </Col>
+                                        <StatusBox label="Safe to Remove?" type={adapterEndpoint.data.application?.system_state?.DISCONNECT_SAFE ? "success" : "danger"}>{adapterEndpoint.data.application?.system_state?.DISCONNECT_SAFE ? "Safe" : "NO, disconnect first"}</StatusBox>
                                     </Row>
                                     <Row>
                                         <Col>
@@ -151,6 +169,8 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                             <StatusBadge label={adapterEndpoint.data.application?.system_state?.SYNC ? "ASIC SYNC High" : "ASIC SYNC Low"} type={adapterEndpoint.data.application?.system_state?.SYNC ? "success" : "danger"}/>
                                         </Col>
                                     </Row>
+                                </Card.Text>
+                                <Card.Footer>
                                     <Row>
                                         <Col>
                                             <StatusBadge label={"FireFly " + adapterEndpoint.data.application?.system_state?.FIREFLY} type={adapterEndpoint.data.application?.system_state?.FIREFLY == "initialised" ? "success" : "danger"}/>
@@ -168,7 +188,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                             <StatusBadge label={"Mic284 " + adapterEndpoint.data.application?.system_state?.MIC284} type={adapterEndpoint.data.application?.system_state?.MIC284 == "initialised" ? "success" : "danger"}/>
                                         </Col>
                                     </Row>
-                                </Card.Text>
+                                </Card.Footer>
                             </Card.Body>
                         </Card>
                     </Col>
