@@ -79,8 +79,10 @@ export function LOKIClockGenerator({adapterEndpoint}) {
 let tempreadings = [];
 let humreadings = [];
 let timestamps = [];
-export function LOKIEnvironment({environmentEndpoint, records_to_render}) {
+export function LOKIEnvironment({adapterEndpoint, records_to_render}) {
     //const environmentEndpoint = useAdapterEndpoint("detector/environment", api_addr, 5000);
+
+    //const [tempreadings, setTempreadings] = useState([]);
 
     // This assumes that the names of reading channels will not change
     // Each is a 2d array: {'board': [value0, value1, value2, ...], ...}
@@ -135,6 +137,7 @@ export function LOKIEnvironment({environmentEndpoint, records_to_render}) {
 
         // Update the live record
         tempreadings = edit_temps;
+        //setTempreadings(edit_temps);
         humreadings = edit_hums;
         timestamps = edit_timestamps;
 
@@ -142,8 +145,8 @@ export function LOKIEnvironment({environmentEndpoint, records_to_render}) {
     }
 
     // Gather current data
-    let tempstates = environmentEndpoint.data.environment?.temperature;
-    let humstates = environmentEndpoint.data.environment?.humidity;
+    let tempstates = adapterEndpoint.data.environment?.temperature;
+    let humstates = adapterEndpoint.data.environment?.humidity;
 
     // Gather a timestamp, potentially for use later on
     // TODO
@@ -187,12 +190,21 @@ export function LOKIEnvironment({environmentEndpoint, records_to_render}) {
     console.log(tempHeaders);
 
     return (
+        <LOKIEnvironmentGraph tempereadings={tempreadings} tempHeaders={tempHeaders} humreadings={humreadings} humHeaders={humHeaders} />
+    )
+
+}
+
+function LOKIEnvironmentGraph({tempreadings, tempHeaders, humreadings, humHeaders}) {
+    if (tempreadings == null) {
+        return (<></>)
+    }
+    return (
         <TitleCard>
             <OdinGraph title="Temperatures" type="line" prop_data={tempreadings} series_names={tempHeaders} />
             <OdinGraph title="Humidities" type="line" prop_data={humreadings} series_names={humHeaders} />
         </TitleCard>
     )
-
 }
 
 export function LOKILEDDisplay({adapterEndpoint}) {

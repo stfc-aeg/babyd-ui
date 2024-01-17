@@ -48,11 +48,14 @@ function BabyD() {
                             <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
                         </Row>
                         <Row>
+                            <BabyD_Lane_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                        </Row>
+                        <Row>
                             <LOKILEDDisplay adapterEndpoint={periodicEndpoint} />
                         </Row>
                     </Col>
                     <Col>
-                        <LOKIEnvironment environmentEndpoint={periodicSlowEndpoint}  records_to_render="20" />
+                        <LOKIEnvironment adapterEndpoint={periodicSlowEndpoint}  records_to_render="20" />
                     </Col>
                 </Row>
             </Container>
@@ -61,6 +64,9 @@ function BabyD() {
                     <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} set_loki_connection_state={set_loki_connection_ok} />
                 </Row>
                 <Row>
+                    <Col>
+                        <BabyD_Timing_Settings adapterEndpoint={periodicSlowEndpoint} asic_enabled={asic_enabled} />
+                    </Col>
                     <Col>
                         <Row>
                             <LOKICarrierInfo adapterEndpoint={staticEndpoint} loki_connection_state={loki_connection_ok}/>
@@ -77,6 +83,7 @@ function BabyD() {
 }
 
 const MainEndpointButton = WithEndpoint(Button);
+const InitialisedEndpointButton = WithEndpoint(Button);
 function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabled, set_asic_enabled, foundLoopException}) {
 
     let latest_asic_enabled = adapterEndpoint.data.application?.system_state?.ASIC_EN;
@@ -93,6 +100,8 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
     }
 
     let latest_main_enable = adapterEndpoint.data.application?.system_state?.MAIN_EN;
+
+    let latest_bd_init = adapterEndpoint.data.application?.system_state?.BD_INITIALISED;
 
     return (
         <TitleCard title="BabyD System Status">
@@ -143,12 +152,20 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                             <Card.Body>
                                 <Card.Header>
                                     <Row>
-                                        <MainEndpointButton endpoint={adapterEndpoint} type="click" fullpath="application/system_state/MAIN_EN" value={!(latest_main_enable)}>
+                                    <Col>
+                                        <MainEndpointButton endpoint={adapterEndpoint} type="click" fullpath="application/system_state/MAIN_EN" value={!(latest_main_enable)} variant={latest_main_enable ? 'danger' : 'primary'}>
                                             {latest_main_enable && <Icon.Plug size={20} />}
                                             {!latest_main_enable && <Icon.PlugFill size={20} />}
                                             {latest_main_enable ? "Disconnect" : "Connect "}
                                             {!latest_main_enable && <Spinner animation="grow" size="sm" />}
                                         </MainEndpointButton>
+                                    </Col>
+                                    <Col>
+                                        <InitialisedEndpointButton endpoint={adapterEndpoint} type="click" fullpath="application/system_state/BD_INITIALISED" value={true} disabled={!latest_main_enable} variant='primary'>
+                                            Initialise
+                                            {(!latest_bd_init && latest_main_enable) && <Spinner animation="grow" size="sm" />}
+                                        </InitialisedEndpointButton>
+                                    </Col>
                                     </Row>
                                 </Card.Header>
                                 <Card.Title>
@@ -162,6 +179,9 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                         <StatusBox label="Safe to Remove?" type={adapterEndpoint.data.application?.system_state?.DISCONNECT_SAFE ? "success" : "danger"}>{adapterEndpoint.data.application?.system_state?.DISCONNECT_SAFE ? "Safe" : "NO, disconnect first"}</StatusBox>
                                     </Row>
                                     <Row>
+                                        <Col>
+                                            <StatusBadge label={latest_bd_init ? "BabyD Initialised" : "BabyD Not Initialised"} type={latest_bd_init ? "success" : "danger"}/>
+                                        </Col>
                                         <Col>
                                             <StatusBadge label={asic_enabled ? "ASIC Enabled" : "ASIC Disabled"} type={asic_enabled ? "success" : "danger"}/>
                                         </Col>
@@ -270,8 +290,50 @@ function BabyD_SPIReadout() {
     // Potentially allow configuration of system for multi-frame etc
 }
 
-function BabyD_Timing_Settings() {
+function BabyD_Timing_Settings({adapterEndpoint, asic_enabled}) {
     // Intuitively display the current timing settings
+
+    if (!asic_enabled) {
+        return (<></>);
+    }
+
+    let timing_registers = adapterEndpoint.data.application?.timings;
+    let timingrows;
+    if (typeof timing_registers !== 'undefined') {
+        let timing_register_names = Object.keys(timing_registers);
+        timingrows = timing_register_names.map((timing_register_name) => {
+            let regval = timing_registers[timing_register_name];
+
+            return (
+                <tr>
+                    <th scope="row">{timing_register_name}</th>
+                    <td>
+                        <StatusBadge label={regval} type='primary'/>
+                    </td>
+                </tr>
+            )
+        });
+    } else {
+        timingrows = null;
+    }
+
+    return (
+        <TitleCard title="BabyD Timings">
+            <Row>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Register</th>
+                            <th scope="col">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {timingrows}
+                    </tbody>
+                </table>
+            </Row>
+        </TitleCard>
+    )
 }
 
 function BabyD_Bias_Control() {
@@ -286,6 +348,65 @@ function BabyD_RegisterAccess() {
     // mappings, as these should make things intuitive.
     // Consider efficient access, and whether this will end up spamming requests to the
     // ASIC where bits are volatile.
+}
+
+function BabyD_Lane_Config({adapterEndpoint, asic_enabled}) {
+    // This will combine firefly and retimer controls for given lanes.
+    if (!asic_enabled) {
+        return (<></>);
+    }
+
+    // Lanes are taken from firefly because they all exist for firefly. Some do not exist
+    // for the retimer (the bypass, for example).
+    let ff_laneinfo = adapterEndpoint.data?.application?.firefly?.CHANNELS;
+    let retimer_laneinfo = adapterEndpoint.data?.application?.retimer?.CHANNELS;
+    let lane_rows;
+    if (typeof ff_laneinfo !== 'undefined' ) {
+        let lane_names = Object.keys(ff_laneinfo);
+        lane_rows = lane_names.map((lane_name) => {
+            let ff_en = ff_laneinfo[lane_name].Enabled;
+            let retimer_lock = lane_name in retimer_laneinfo ? retimer_laneinfo[lane_name].CDR_Locked : null;
+            let retimer_passthrough = lane_name in retimer_laneinfo ? retimer_laneinfo[lane_name].Unlocked_Passthrough : null;
+            console.log('ff en', ff_en);
+            return (
+                <tr>
+                    <th scope="row">{lane_name}</th>
+                    <td>
+                        <StatusBadge label={ff_en ? 'Enabled' : 'Disabled'} type={ff_en ? 'success' : 'danger'}/>
+                    </td>
+                    <td>
+                        <StatusBadge label={retimer_lock ? 'Locked' : 'No'} type={retimer_lock ? 'success' : 'danger'}/>
+                    </td>
+                    <td>
+                        <StatusBadge label={retimer_passthrough ? 'Yes' : 'No'} type={retimer_passthrough ? 'success' : 'danger'}/>
+                    </td>
+                </tr>
+            )
+        });
+    } else {
+        lane_rows = null;
+    }
+
+    return (
+        <TitleCard title="BabyD Fast Data Ouptut Lanes">
+            <Row>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Lane Name</th>
+                            <th scope="col">FireFly Output</th>
+                            <th scope="col">Retimer Locked</th>
+                            <th scope="col">Retimer Passthrough</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {lane_rows}
+                    </tbody>
+                </table>
+            </Row>
+        </TitleCard>
+    )
+
 }
 
 export default BabyD;
