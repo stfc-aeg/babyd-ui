@@ -5,12 +5,12 @@ import {useState} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint, ToggleSwitch} from 'odin-react';
+import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint, ToggleSwitch, OdinGraph} from 'odin-react';
 import 'odin-react/dist/index.css'
 
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKILEDDisplay, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
 //import {ArrowRight} from 'react-bootstrap-icons';
 import * as Icon from 'react-bootstrap-icons';
 
@@ -55,7 +55,15 @@ function BabyD() {
                         </Row>
                     </Col>
                     <Col>
-                        <LOKIEnvironment adapterEndpoint={periodicSlowEndpoint}  records_to_render="20" />
+                        <Row>
+                            <BabyD_Readout_Image adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
+                        </Row>
+                        <Row>
+                            <BabyD_Readout_Render adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
+                        </Row>
+                        <Row>
+                            <LOKIEnvironment adapterEndpoint={periodicSlowEndpoint}  records_to_render="20" />
+                        </Row>
                     </Col>
                 </Row>
             </Container>
@@ -350,6 +358,60 @@ function BabyD_RegisterAccess() {
     // ASIC where bits are volatile.
 }
 
+function BabyD_Readout_Image({adapterEndpoint, asic_enabled}) {
+    let image_source = adapterEndpoint.data?.application?.readout?.imgout;
+
+    if (!asic_enabled) {
+        return (<></>);
+    }
+
+    if ((typeof image_source !== 'undefined') && (image_source !== null)) {
+        return (
+            <TitleCard title='Readout Image'>
+                <Row>
+                    <Col>
+                        <Image src={"http://192.168.0.172:8888/" + image_source} fluid />
+                    </Col>
+                </Row>
+            </TitleCard>
+        )
+    } else {
+        return (<></>)
+    }
+}
+
+function BabyD_Readout_Render({adapterEndpoint, asic_enabled}) {
+    let image_dat_fine = adapterEndpoint?.data?.application?.readout?.imgdat_fine;
+    let image_dat_coarse = adapterEndpoint?.data?.application?.readout?.imgdat_coarse;
+
+    if (!asic_enabled) {
+        return (<></>);
+    }
+
+    if ((typeof image_dat_fine !== 'undefined') && (typeof image_dat_coarse !== 'undefined')) {
+
+        return (
+            <TitleCard title='Readout Render'>
+                <Row>
+                    <Col>
+                        <div class="d-flex">
+                        <div class="flex-shrink-0">
+                        <OdinGraph title='Fine' type='heatmap' prop_data={image_dat_fine} />
+                        </div>
+                        </div>
+                    </Col>
+                    <Col>
+                        <OdinGraph title='Coarse' type='heatmap' prop_data={image_dat_coarse} />
+                    </Col>
+                </Row>
+            </TitleCard>
+        )
+
+    } else {
+        return (<></>)
+    }
+}
+
 function BabyD_Lane_Config({adapterEndpoint, asic_enabled}) {
     // This will combine firefly and retimer controls for given lanes.
     if (!asic_enabled) {
@@ -375,10 +437,10 @@ function BabyD_Lane_Config({adapterEndpoint, asic_enabled}) {
                         <StatusBadge label={ff_en ? 'Enabled' : 'Disabled'} type={ff_en ? 'success' : 'danger'}/>
                     </td>
                     <td>
-                        <StatusBadge label={retimer_lock ? 'Locked' : 'No'} type={retimer_lock ? 'success' : 'danger'}/>
+                        <StatusBadge label={retimer_lock == null ? '' : (retimer_lock ? 'Locked' : 'No')} type={retimer_lock ? 'success' : 'danger'}/>
                     </td>
                     <td>
-                        <StatusBadge label={retimer_passthrough ? 'Yes' : 'No'} type={retimer_passthrough ? 'success' : 'danger'}/>
+                        <StatusBadge label={retimer_passthrough == null ? '' : (retimer_passthrough ? 'Yes' : 'No')} type={retimer_passthrough ? 'success' : 'danger'}/>
                     </td>
                 </tr>
             )
