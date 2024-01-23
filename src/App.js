@@ -11,7 +11,6 @@ import 'odin-react/dist/index.css'
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKILEDDisplay, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
 
 import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
-//import {ArrowRight} from 'react-bootstrap-icons';
 import * as Icon from 'react-bootstrap-icons';
 
 import Mermaid from "./Mermaid";
@@ -44,7 +43,7 @@ function BabyD() {
                         <Row>
                             <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
                         </Row>
-                        <Row>
+                        <Row xs={1} md={2}>
                             <Col>
                                 <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} showgraph={true} />
                             </Col>
@@ -145,7 +144,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                         <Icon.ArrowRight size={40} color={loki_connection_state ? "green" : "red"}/>
                     </Col>
                     <Col class="col align-self-center">
-                        <Card className="text-center" style={{width: '7rem'}}>
+                        <Card className="text-center" style={{width: '18rem'}}>
                             <Card.Body>
                                 <Card.Title>
                                     LOKI
@@ -302,7 +301,6 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
     let prbs_currently_selected = adapterEndpoint.data.application?.pipeline?.prbs_length;
 
     let merchart = `
-    %%{init: {'flowchart' : {'curve' : 'linear'}}}%%
         flowchart LR
             pixel[PIXEL]
             subgraph PRBS
@@ -330,10 +328,10 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
 
             subgraph PRBS-Select
     ` + ((output_currently_selected == 'prbs') || (output_currently_selected == 'aurora' && aurora_currently_selected == 'prbs') ? `
-                prbssel{PRBS SELECT}
+                prbssel{PRBS<br>SELECT}
                 style prbssel stroke:#333,stroke-width:4px
     ` : `
-                prbssel{PRBS SELECT}
+                prbssel{PRBS<br>SELECT}
     `) + `
 
     ` + (prbs_currently_selected == '15' ? `
@@ -346,7 +344,7 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
             end
 
             subgraph Aurora
-    ` + (aurora_currently_selected == 'prbs' ? `
+    ` + (output_currently_selected == 'aurora' ? `
                 aurora{Aurora}
                 style aurora stroke:#333,stroke-width:4px
     ` : `
@@ -362,19 +360,24 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
             end
     ` + (
     `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) + `
+    ` + (output_currently_selected == 'user' ? `
+            style user stroke:#333,stroke-width:4px
+    ` : `
+    `) + `
+
             subgraph Output
                 output[Output]
     ` + (output_currently_selected == 'user' ? `
+                prbssel -...-> output
                 user ==> output
-                prbssel -.-> output
                 aurora -.-> output
     ` : (output_currently_selected == 'prbs' ? `
+                prbssel ====> output
                 user -.-> output
-                prbssel ==> output
                 aurora -.-> output
     ` : `
+                prbssel -...-> output
                 user -.-> output
-                prbssel -.-> output
                 aurora ==> output
     `)) + `
             end
@@ -390,15 +393,24 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
                 </Row>
                 <Row>
                     <Col>
+                        {/*<StatusBox label="PRBS">{adapterEndpoint.data.application?.pipeline?.prbs_length}</StatusBox>*/}
+                        <PRBS_len_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/prbs_length" buttonText={prbs_currently_selected ? "PRBS Mode: PRBS-" + prbs_currently_selected: "None selected"} variant='info' >
+                            <Dropdown.Item eventKey={15}>PRBS-15</Dropdown.Item>
+                            <Dropdown.Item eventKey={23}>PRBS-23</Dropdown.Item>
+                        </PRBS_len_Dropdown>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
                         {/*<StatusBox label="FIFO input">{adapterEndpoint.data.application?.pipeline?.fifo_in_mux}</StatusBox>*/}
-                        <FIFO_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/fifo_in_mux" buttonText={fifo_currently_selected ? "FIFO Input: " + fifo_currently_selected: "None selected"} >
+                        <FIFO_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/fifo_in_mux" buttonText={fifo_currently_selected ? "FIFO In: " + fifo_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="prbs15">prbs15</Dropdown.Item>
                             <Dropdown.Item eventKey="pixel">pixel</Dropdown.Item>
                         </FIFO_input_Dropdown>
                     </Col>
                     <Col>
                         {/*<StatusBox label="Aurora input">{adapterEndpoint.data.application?.pipeline?.aurora_in_mux}</StatusBox>*/}
-                        <Aurora_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/aurora_in_mux" buttonText={aurora_currently_selected ? "Aurora Input: " + aurora_currently_selected: "None selected"} >
+                        <Aurora_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/aurora_in_mux" buttonText={aurora_currently_selected ? "Aurora In: " + aurora_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="fifo">fifo</Dropdown.Item>
                             <Dropdown.Item eventKey="prbs">prbs</Dropdown.Item>
                         </Aurora_input_Dropdown>
@@ -412,11 +424,6 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
                         </Output_Dropdown>
                     </Col>
                     <Col>
-                        {/*<StatusBox label="PRBS">{adapterEndpoint.data.application?.pipeline?.prbs_length}</StatusBox>*/}
-                        <PRBS_len_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/prbs_length" buttonText={prbs_currently_selected ? "PRBS-" + prbs_currently_selected: "None selected"} variant='info' >
-                            <Dropdown.Item eventKey={15}>PRBS-15</Dropdown.Item>
-                            <Dropdown.Item eventKey={23}>PRBS-23</Dropdown.Item>
-                        </PRBS_len_Dropdown>
                     </Col>
                 </Row>
                 <Row>
