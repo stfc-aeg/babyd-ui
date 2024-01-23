@@ -14,6 +14,9 @@ import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from
 //import {ArrowRight} from 'react-bootstrap-icons';
 import * as Icon from 'react-bootstrap-icons';
 
+import Mermaid from "./Mermaid";
+import mermaid from "mermaid";
+
 function BabyD() {
     const periodicEndpoint = useAdapterEndpoint("detector", "", 1000);
     const staticEndpoint = useAdapterEndpoint("detector");
@@ -43,7 +46,7 @@ function BabyD() {
                         </Row>
                         <Row>
                             <Col>
-                                <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} showgraph={true} />
                             </Col>
                             <Col>
                                 <BabyD_Frame_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
@@ -288,7 +291,7 @@ const FIFO_input_Dropdown = WithEndpoint(DropdownSelector);
 const Aurora_input_Dropdown = WithEndpoint(DropdownSelector);
 const Output_Dropdown = WithEndpoint(DropdownSelector);
 const PRBS_len_Dropdown = WithEndpoint(DropdownSelector);
-function BabyD_Data_Config({adapterEndpoint, asic_enabled}) {
+function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
     // Show intuitively the configuration of what's being output via the fast data and pixel logic as a flowchart.
     // Also allow configuration of these settings.
     // Also show the full pathway including the carrier board, therefore retimer settings and firefly settings
@@ -298,9 +301,93 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled}) {
     let output_currently_selected = adapterEndpoint.data.application?.pipeline?.output_mux;
     let prbs_currently_selected = adapterEndpoint.data.application?.pipeline?.prbs_length;
 
+    let merchart = `
+    %%{init: {'flowchart' : {'curve' : 'linear'}}}%%
+        flowchart LR
+            pixel[PIXEL]
+            subgraph PRBS
+                PRBS23[PRBS-23]
+                PRBS15[PRBS-15]
+            end
+
+
+            subgraph FIFO
+    ` + ((output_currently_selected == 'aurora' && aurora_currently_selected == 'fifo') ? `
+                fifo{FIFO}
+                style fifo stroke:#333,stroke-width:4px
+    ` : `
+                fifo{FIFO}
+    `) + `
+    ` + (fifo_currently_selected == 'prbs15' ? `
+                PRBS15 ==> fifo
+                pixel -.-> fifo
+    ` : `
+                PRBS15 -.-> fifo
+                pixel ==> fifo
+    `) + `
+            end
+
+
+            subgraph PRBS-Select
+    ` + ((output_currently_selected == 'prbs') || (output_currently_selected == 'aurora' && aurora_currently_selected == 'prbs') ? `
+                prbssel{PRBS SELECT}
+                style prbssel stroke:#333,stroke-width:4px
+    ` : `
+                prbssel{PRBS SELECT}
+    `) + `
+
+    ` + (prbs_currently_selected == '15' ? `
+                PRBS23 -.-> prbssel
+                PRBS15 ==> prbssel
+    ` : `
+                PRBS23 ==> prbssel
+                PRBS15 -.-> prbssel
+    `) + `
+            end
+
+            subgraph Aurora
+    ` + (aurora_currently_selected == 'prbs' ? `
+                aurora{Aurora}
+                style aurora stroke:#333,stroke-width:4px
+    ` : `
+                aurora{Aurora}
+    `) + `
+    ` + (aurora_currently_selected == 'fifo' ? `
+                prbssel -.-> aurora
+                fifo ==> aurora
+    ` : `
+                prbssel ==> aurora
+                fifo -.-> aurora
+    `) + `
+            end
+    ` + (
+    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) + `
+            subgraph Output
+                output[Output]
+    ` + (output_currently_selected == 'user' ? `
+                user ==> output
+                prbssel -.-> output
+                aurora -.-> output
+    ` : (output_currently_selected == 'prbs' ? `
+                user -.-> output
+                prbssel ==> output
+                aurora -.-> output
+    ` : `
+                user -.-> output
+                prbssel -.-> output
+                aurora ==> output
+    `)) + `
+            end
+    `
+
+    console.log(merchart);
+
     if (asic_enabled) {
         return (
             <TitleCard title="Fast Data Config">
+                <Row>
+                    <Mermaid chart={showgraph ? merchart : <></>} uid={"dataflow"} />
+                </Row>
                 <Row>
                     <Col>
                         {/*<StatusBox label="FIFO input">{adapterEndpoint.data.application?.pipeline?.fifo_in_mux}</StatusBox>*/}
