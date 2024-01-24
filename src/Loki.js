@@ -275,7 +275,7 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_state, s
                     <td>
                         <StatusBadge label={looprunning ? "Running" : ""} type="success" />
                         <StatusBadge label={loopdone ? "Done" : ""} type="warning" />
-                        <StatusBadge label={loopexception == "N/A" ? "" : loopexception} type="danger" />
+                        <StatusBadge label={loopexception == "N/A" ? "" : "ERR: " + loopexception} type="danger" />
                     </td>
                 </tr>
             )

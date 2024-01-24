@@ -10,12 +10,13 @@ import 'odin-react/dist/index.css'
 
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKILEDDisplay, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image, Modal} from 'react-bootstrap'
 import * as Icon from 'react-bootstrap-icons';
 
 import Mermaid from "./Mermaid";
 import mermaid from "mermaid";
 
+const ResetMonitorEndpointButton = WithEndpoint(Button);
 function BabyD() {
     const periodicEndpoint = useAdapterEndpoint("detector", "", 1000);
     const staticEndpoint = useAdapterEndpoint("detector");
@@ -30,6 +31,14 @@ function BabyD() {
     return (
         <OdinApp title="BabyD UI" navLinks={["BabyD Control", "Debug Info"]}>
             <Container fluid>
+                <Alert variant={'danger'} show={loki_connection_ok && periodicEndpoint?.data?.application?.system_state?.UNCONTROLLED_RESET}>
+                    Unwanted ASIC reset detected! ID was read as default value 0xABCD...
+                    <div className="d-flex justify-content-end">
+                        <ResetMonitorEndpointButton endpoint={staticEndpoint} event_type="click" delay={100} fullpath="application/system_state/UNCONTROLLED_RESET" value={true} variant={'danger'}>
+                            Clear Flag
+                        </ResetMonitorEndpointButton>
+                    </div>
+                </Alert>
                 <Row>
                     <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} set_loki_connection_state={set_loki_connection_ok} />
                 </Row>
@@ -38,21 +47,34 @@ function BabyD() {
                         Possible Loop Error in LOKI control unit! Check loop status.
                     </Alert>
                 </Row>
-                <Row>
+                <Row xs={1} xl={2}>
                     <Col>
                         <Row>
-                            <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
+                            <Col>
+                                <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
+                            </Col>
                         </Row>
                         <Row xs={1} md={2}>
                             <Col>
                                 <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} showgraph={true} />
                             </Col>
                             <Col>
-                                <BabyD_Frame_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                <Row>
+                                    <Col>
+                                        <BabyD_Frame_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col>
+                                        <BabyD_Serialiser_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                    </Col>
+                                </Row>
                             </Col>
                         </Row>
                         <Row>
-                            <BabyD_Lane_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                            <Col>
+                                <BabyD_Lane_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                            </Col>
                         </Row>
                         {/*<Row>
                             <LOKILEDDisplay adapterEndpoint={periodicEndpoint} />
@@ -129,21 +151,6 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
             <Container>
                 <Row class="row align-items-center justify-content-center d-flex">
                     <Col class="col align-self-center">
-                        <Card className="text-center" style={{width: '7rem'}}>
-                            <Card.Body>
-                                <Card.Title>
-                                    Control PC
-                                </Card.Title>
-                                <Card.Text>
-                                    <Icon.PcDisplayHorizontal size={30}/>
-                                </Card.Text>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col class="col align-self-center">
-                        <Icon.ArrowRight size={40} color={loki_connection_state ? "green" : "red"}/>
-                    </Col>
-                    <Col class="col align-self-center">
                         <Card className="text-center" style={{width: '18rem'}}>
                             <Card.Body>
                                 <Card.Title>
@@ -173,7 +180,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                         <StatusBadge label={loki_connection_state ? "Connected" : "No Con"} type={loki_connection_state ? "success" : "danger"} />
                                     </Row>
                                     <Row>
-                                        <StatusBadge label={(!foundLoopException && loki_connection_state) ? "" : "Loop Error"} type={loki_connection_state ? "success" : "danger"} />
+                                        <StatusBadge label={(!foundLoopException && loki_connection_state) ? "" : "Loop Error"} type={!foundLoopException ? "success" : "danger"} />
                                     </Row>
                                 </Card.Text>
                             </Card.Body>
@@ -190,7 +197,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                 <Card.Header>
                                     <Row>
                                     <Col>
-                                        <MainEndpointButton endpoint={adapterEndpoint} event_type="click" fullpath="application/system_state/MAIN_EN" value={!(latest_main_enable)} variant={latest_main_enable ? 'danger' : 'primary'}>
+                                        <MainEndpointButton endpoint={adapterEndpoint} event_type="click" delay={100} fullpath="application/system_state/MAIN_EN" value={!(latest_main_enable)} variant={latest_main_enable ? 'danger' : 'primary'}>
                                             {latest_main_enable && <Icon.Plug size={20} />}
                                             {!latest_main_enable && <Icon.PlugFill size={20} />}
                                             {latest_main_enable ? "Disconnect" : "Connect "}
@@ -367,6 +374,7 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
 
             subgraph Output
                 output[Output]
+                style output stroke:#333,stroke-width:4px
     ` + (output_currently_selected == 'user' ? `
                 prbssel -...-> output
                 user ==> output
@@ -402,21 +410,18 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
                 </Row>
                 <Row>
                     <Col>
-                        {/*<StatusBox label="FIFO input">{adapterEndpoint.data.application?.pipeline?.fifo_in_mux}</StatusBox>*/}
                         <FIFO_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/fifo_in_mux" buttonText={fifo_currently_selected ? "FIFO In: " + fifo_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="prbs15">prbs15</Dropdown.Item>
                             <Dropdown.Item eventKey="pixel">pixel</Dropdown.Item>
                         </FIFO_input_Dropdown>
                     </Col>
                     <Col>
-                        {/*<StatusBox label="Aurora input">{adapterEndpoint.data.application?.pipeline?.aurora_in_mux}</StatusBox>*/}
                         <Aurora_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/aurora_in_mux" buttonText={aurora_currently_selected ? "Aurora In: " + aurora_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="fifo">fifo</Dropdown.Item>
                             <Dropdown.Item eventKey="prbs">prbs</Dropdown.Item>
                         </Aurora_input_Dropdown>
                     </Col>
                     <Col>
-                        {/*<StatusBox label="Output">{adapterEndpoint.data.application?.pipeline?.output_mux}</StatusBox>*/}
                         <Output_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/output_mux" buttonText={output_currently_selected ? "Output: " + output_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="prbs">prbs</Dropdown.Item>
                             <Dropdown.Item eventKey="aurora">aurora</Dropdown.Item>
@@ -452,12 +457,9 @@ function BabyD_Frame_Config({adapterEndpoint, asic_enabled}) {
             <TitleCard title="Data Frame Config">
                 <Row>
                     <Col>
-                        Low:
-                        <StatusBadge label={current_low} />
-                    </Col>
-                    <Col>
-                        High:
-                        <StatusBadge label={current_high} />
+                        Frame Row Range:
+                        &nbsp;
+                        <StatusBadge label={current_low + ' - ' + current_high} />
                     </Col>
                 </Row>
                 <Row>
@@ -467,6 +469,28 @@ function BabyD_Frame_Config({adapterEndpoint, asic_enabled}) {
         )
     } else {
         return (<></>)
+    }
+}
+
+const SerialiserHalfrateButton = WithEndpoint(Button);
+function BabyD_Serialiser_Config({adapterEndpoint, asic_enabled}) {
+    let halfrate_en = adapterEndpoint?.data?.application?.serialiser?.halfrate;
+
+    if (asic_enabled) {
+        return (
+            <TitleCard title="Serialiser Control">
+                <Row>
+                    <Col>
+                        Serialiser Half-rate (7GHz): 
+                        <SerialiserHalfrateButton endpoint={adapterEndpoint} event_type="click" fullpath="application/serialiser/halfrate" value={!(halfrate_en)} variant={halfrate_en ? 'danger' : 'primary'}>
+                        {halfrate_en ? "Disable" : "Enable"}
+                        </SerialiserHalfrateButton>
+                    </Col>
+                </Row>
+            </TitleCard>
+        )
+    } else {
+        return (<></>);
     }
 }
 
@@ -521,6 +545,8 @@ function BabyD_Timing_Settings({adapterEndpoint, asic_enabled}) {
     )
 }
 
+const VDACReadbackButton = WithEndpoint(Button);
+const IDACReadbackButton = WithEndpoint(Button);
 function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
     // Allow configuration of DACs, ADCs, both internal and external (bias settings).
     // Visually demonstrate where sources of signals are.
@@ -534,26 +560,30 @@ function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
     // there are keys on the same level as bias names that are not biases, which would make the
     // handlind complicated. However, some generation is still automatic, as the bias sources and
     // available readout depends on the setup.
-    let bias_names = ['VOUTTH1', 'VOUTTH2', 'IDACCAL', 'IDACCANCEL1', 'IDACCANCEL2', 'VDACREF', 'LDOREF', 'IDACREF', 'COMPAMPBUFFBIAS'];
+    let bias_names = ['VREFAMP', 'VOUTTH1', 'VOUTTH2', 'IDACCAL', 'IDACCANCEL1', 'IDACCANCEL2', 'VDACREF', 'LDOREF', 'IDACREF', 'COMPAMPBUFFBIAS'];
 
     let bias_rows;
     if (typeof bias_info !== 'undefined') {
         bias_rows = bias_names.map((bias_name) => {
             let voltage_readback = bias_info[bias_name]?.voltage_readback;
+            let current_calc = bias_info[bias_name]?.current_calc;
             let source_select = bias_info[bias_name]?.source_select;
             return (
                 <TitleCard title={bias_name}>
-                <Row>
-                    {voltage_readback && <StatusBox label="Voltage Readback">{voltage_readback.toFixed(3)}</StatusBox>}
-                </Row>
-                <Row>
-                    <Col>
-                        {source_select && <StatusBox label="Source Select">{source_select}</StatusBox>}
-                    </Col>
-                    <Col>
-                        {source_select == 'internal' && <StatusBox label="Internal Count">{bias_info[bias_name]?.sources?.internal?.count}</StatusBox>}
-                    </Col>
-                </Row>
+                    <Row>
+                        {voltage_readback && <StatusBox label="Voltage Readback">{voltage_readback.toFixed(3)}</StatusBox>}
+                    </Row>
+                    <Row>
+                        {current_calc && <StatusBox label="Calc Current (experimental) (mA)">{(current_calc*1000).toFixed(3)}</StatusBox>}
+                    </Row>
+                    <Row>
+                        <Col>
+                            {source_select && <StatusBox label="Source Select">{source_select}</StatusBox>}
+                        </Col>
+                        <Col>
+                            {source_select == 'internal' && <StatusBox label="Internal Count">{bias_info[bias_name]?.sources?.internal?.count}</StatusBox>}
+                        </Col>
+                    </Row>
                 </TitleCard>
             )
         });
@@ -565,9 +595,15 @@ function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
                 <Row>
                     <Col>
                         <StatusBox label="VDAC Readback">{bias_info?.readback_enable?.VDAC}</StatusBox>
+                        <VDACReadbackButton endpoint={adapterEndpoint} event_type="click" fullpath="application/bias_settings/readback_enable/VDAC" value={!(bias_info?.readback_enable?.VDAC)} variant={bias_info?.readback_enable?.VDAC ? 'danger' : 'primary'}>
+                        IDAC Readback EN
+                        </VDACReadbackButton>
                     </Col>
                     <Col>
                         <StatusBox label="IDAC Readback">{bias_info?.readback_enable?.IDAC}</StatusBox>
+                        <IDACReadbackButton endpoint={adapterEndpoint} event_type="click" fullpath="application/bias_settings/readback_enable/IDAC" value={!(bias_info?.readback_enable?.IDAC)} variant={bias_info?.readback_enable?.IDAC ? 'danger' : 'primary'}>
+                        IDAC Readback EN
+                        </IDACReadbackButton>
                     </Col>
                     <Col>
                         {bias_rows}
