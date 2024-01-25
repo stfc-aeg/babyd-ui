@@ -17,6 +17,7 @@ import Mermaid from "./Mermaid";
 import mermaid from "mermaid";
 
 const ResetMonitorEndpointButton = WithEndpoint(Button);
+const SyncEndpointToggleSwitch = WithEndpoint(ToggleSwitch);
 function BabyD() {
     const periodicEndpoint = useAdapterEndpoint("detector", "", 1000);
     const staticEndpoint = useAdapterEndpoint("detector");
@@ -237,6 +238,9 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                         </Col>
                                         <Col>
                                             {latest_main_enable && <StatusBadge label={adapterEndpoint.data.application?.system_state?.SYNC ? "ASIC SYNC High" : "ASIC SYNC Low"} type={adapterEndpoint.data.application?.system_state?.SYNC ? "success" : "danger"}/>}
+                                        </Col>
+                                        <Col>
+                                            <SyncEndpointToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Manual SYNC" fullpath="application/system_state/SYNC" checked={adapterEndpoint.data.application?.system_state?.SYNC} value={adapterEndpoint.data.application?.system_state?.SYNC} />
                                         </Col>
                                     </Row>
                                 </Card.Text>
@@ -473,6 +477,7 @@ function BabyD_Frame_Config({adapterEndpoint, asic_enabled}) {
 }
 
 const SerialiserHalfrateButton = WithEndpoint(Button);
+const SerialiserHalfrateToggleSwitch = WithEndpoint(ToggleSwitch);
 function BabyD_Serialiser_Config({adapterEndpoint, asic_enabled}) {
     let halfrate_en = adapterEndpoint?.data?.application?.serialiser?.halfrate;
 
@@ -481,10 +486,10 @@ function BabyD_Serialiser_Config({adapterEndpoint, asic_enabled}) {
             <TitleCard title="Serialiser Control">
                 <Row>
                     <Col>
-                        Serialiser Half-rate (7GHz): 
-                        <SerialiserHalfrateButton endpoint={adapterEndpoint} event_type="click" fullpath="application/serialiser/halfrate" value={!(halfrate_en)} variant={halfrate_en ? 'danger' : 'primary'}>
-                        {halfrate_en ? "Disable" : "Enable"}
-                        </SerialiserHalfrateButton>
+                        <SyncEndpointToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Manual SYNC" fullpath="application/system_state/SYNC" checked={adapterEndpoint.data.application?.system_state?.SYNC} value={adapterEndpoint.data.application?.system_state?.SYNC} />
+                    </Col>
+                    <Col>
+                        <SerialiserHalfrateToggleSwitch endpoint={adapterEndpoint} event_type="click" label={"Serialiser Half-rate (7GHz)"} fullpath="application/serialiser/halfrate" checked={halfrate_en} value={halfrate_en} />
                     </Col>
                 </Row>
             </TitleCard>
