@@ -36,25 +36,41 @@ jobs:
         zip -r build.zip .
     - name: List contents of zip
       run: unzip -l build/build.zip
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v4.3.0
+    # - name: Upload build artifact
+    #   uses: actions/upload-artifact@v4.3.0
+    #   with:
+    #     name: build
+    #     path: build/build.zip
+    - name: Create release if tagged
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1.13.0
       with:
-        name: build
-        path: build/build.zip
+        artifactErrorsFailBuild: true
+        artifacts: build/build.zip
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
+        # Create as a draft so that it can be vetted and notes added
+        draft: true
+        generateReleaseNotes: true
+        skipIfReleaseExists: true
 
-    strategy:
-      matrix:
-        node-version: [16.x]
+        # Update an existing release, but only if it's draft or prerelease. If notes already exist, leave them.
+        allowUpdates: true
+        updateOnlyUnreleased: true
+        omitBodyDuringUpdate: true
 
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4.1.1
-        with:
-          name: build
-          path: build.zip
-      - name: List contents of zip
-        run: unzip -l build.zip
+  # release:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+
+  #   strategy:
+  #     matrix:
+  #       node-version: [16.x]
+
+  #   steps:
+  #     - name: Download build artifact
+  #       uses: actions/download-artifact@v4.1.1
+  #       with:
+  #         name: build
+  #         path: build.zip
+  #     - name: List contents of zip
+  #       run: unzip -l build.zip
