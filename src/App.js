@@ -287,12 +287,6 @@ function BabyDDeviceInitBadges({adapterEndpoint, hide_init_done=true}) {
     }
 }
 
-function BabyD_Main_Control({periodicEndpoint}) {
-    // This should be the main component used to bring up the system. It should clearly indicate current state,
-    // and if possible make obvious what next steps should be. Intuitiveness is key. The user should KNOW when
-    // it's safe to power down etc just by glancing at it, and KNOW what to click next.
-}
-
 const FIFOInputDropdown = WithEndpoint(DropdownSelector);
 const AuroraInputDropdown = WithEndpoint(DropdownSelector);
 const OutputDropdown = WithEndpoint(DropdownSelector);
@@ -366,8 +360,8 @@ function BabyDDataConfig({adapterEndpoint, asic_enabled, showgraph=false}) {
     `) + `
             end
     ` + (
-    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) + `
-    ` + (output_currently_selected === 'user' ? `
+    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) +
+    (output_currently_selected === 'user' ? `
             style user stroke:#333,stroke-width:4px
     ` : `
     `) + `
@@ -472,7 +466,6 @@ function BabyDFrameConfig({adapterEndpoint, asic_enabled}) {
     }
 }
 
-const SerialiserHalfrateButton = WithEndpoint(Button);
 const SerialiserHalfrateToggleSwitch = WithEndpoint(ToggleSwitch);
 function BabyDSerialiserConfig({adapterEndpoint, asic_enabled}) {
     let halfrate_en = adapterEndpoint?.data?.application?.serialiser?.halfrate;

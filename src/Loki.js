@@ -8,11 +8,11 @@ const ClkgenEndpointDropdown = WithEndpoint(DropdownSelector);
 export function StatusBadge(_ref) {
     let label = _ref.label;
     let type = _ref.type;
-    if (type === null) {
+    if (type === null || typeof type === 'undefined') {
         type = "primary";
     }
     let wrap = _ref.wrap;
-    if (wrap === null) {
+    if (wrap === null || typeof wrap === 'undefined') {
         wrap = false
     }
 
