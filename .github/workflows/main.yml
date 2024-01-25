@@ -29,6 +29,16 @@ jobs:
     - run: npm run build --if-present
       timeout-minutes: 10
     #- run: npm test temporarily remove; I think it's failing due to axios module import in odin-react
+    
+    - name: Create zip archive
+      run: |
+        cd build
+        zip -r build.zip app
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4.3.0
+      with:
+        name: build
+        path: build.zip
 
   release:
     needs: build
@@ -39,13 +49,12 @@ jobs:
         node-version: [16.x]
 
     steps:
-      - name: Create zip archive
-        run: |
-          cd build
-          zip -r build.zip app
+      - name: Download build artifact
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4.3.0
+        uses: actions/down-artifact@v4.3.0
         with:
           name: build
           path: build.zip
+      - name: List recovered files
+        run: ls -lah .
       
