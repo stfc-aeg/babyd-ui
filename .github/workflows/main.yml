@@ -33,7 +33,9 @@ jobs:
     - name: Create zip archive
       run: |
         cd build
-        zip -r build.zip app
+        zip -r build.zip .
+    - name: List contents of zip
+      run: unzip -l build.zip
     - name: Upload build artifact
       uses: actions/upload-artifact@v4.3.0
       with:
