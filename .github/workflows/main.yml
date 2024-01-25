@@ -40,7 +40,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.0
       with:
         name: build
-        path: build.zip
+        path: build/build.zip
 
   release:
     needs: build
@@ -56,6 +56,5 @@ jobs:
         with:
           name: build
           path: build.zip
-      - name: List recovered files
-        run: ls -lah .
-      
+      - name: List contents of zip
+        run: unzip -l build.zip
