@@ -50,8 +50,7 @@ jobs:
 
     steps:
       - name: Download build artifact
-      - name: Upload build artifact
-        uses: actions/down-artifact@v4.3.0
+        uses: actions/download-artifact@v4.1.1
         with:
           name: build
           path: build.zip
