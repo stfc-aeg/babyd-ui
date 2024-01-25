@@ -31,6 +31,7 @@ jobs:
     #- run: npm test temporarily remove; I think it's failing due to axios module import in odin-react
 
   release:
+    needs: build
     runs-on: ubuntu-latest
 
     strategy:
