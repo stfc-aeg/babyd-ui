@@ -1,9 +1,16 @@
 name: Node.js CI
 
+# This workflow will attempt to build static resources with NPM for any commit to main, or PR'ed to main.
+# Additionally, for any tags pushed (that start with 'v' indicating a version), a release will be created
+# including the static resources. This release will be created as a draft so that more detailed notes can
+# be added before marking it as a proper release. If a draft release already exists matching the tag name,
+# the existing artifacts will be overridden, but the release body will remain. If the existing release is
+# not a draft, nothing will be overridden.
+
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
     branches: [ main ]
   pull_request:
     branches: [ main ]
@@ -38,13 +45,8 @@ jobs:
         zip -r build.zip .
     - name: List contents of zip
       run: unzip -l build/build.zip
-    # - name: Upload build artifact
-    #   uses: actions/upload-artifact@v4.3.0
-    #   with:
-    #     name: build
-    #     path: build/build.zip
     - name: Create release if tagged
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/v')
       uses: ncipollo/release-action@v1
       with:
         artifactErrorsFailBuild: true
@@ -59,20 +61,3 @@ jobs:
         allowUpdates: true
         updateOnlyUnreleased: true
         omitBodyDuringUpdate: true
-
-  # release:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-
-  #   strategy:
-  #     matrix:
-  #       node-version: [16.x]
-
-  #   steps:
-  #     - name: Download build artifact
-  #       uses: actions/download-artifact@v4.1.1
-  #       with:
-  #         name: build
-  #         path: build.zip
-  #     - name: List contents of zip
-  #       run: unzip -l build.zip
