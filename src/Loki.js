@@ -1,19 +1,18 @@
 import React from 'react';
 
-import {useAdapterEndpoint, DropdownSelector, WithEndpoint, TitleCard, OdinGraph} from 'odin-react';
-import {Dropdown, Row, Col, Alert} from 'react-bootstrap';
-import {useState} from 'react';
+import {DropdownSelector, WithEndpoint, TitleCard, OdinGraph} from 'odin-react';
+import {Dropdown, Row, Alert} from 'react-bootstrap';
 
 const ClkgenEndpointDropdown = WithEndpoint(DropdownSelector);
 
 export function StatusBadge(_ref) {
     let label = _ref.label;
     let type = _ref.type;
-    if (type == null) {
+    if (type === null || typeof type === 'undefined') {
         type = "primary";
     }
     let wrap = _ref.wrap;
-    if (wrap == null) {
+    if (wrap === null || typeof wrap === 'undefined') {
         wrap = false
     }
 
@@ -68,7 +67,7 @@ export function LOKIClockGenerator({adapterEndpoint}) {
 
     return (
         <TitleCard title="LOKI Clock Generator control">
-            Clock Generator Device: <StatusBadge label={adapterEndpoint.data.clkgen?.drivername} type={adapterEndpoint.data.clkgen?.drivername == null? "warning" : "success"} />
+            Clock Generator Device: <StatusBadge label={adapterEndpoint.data.clkgen?.drivername} type={adapterEndpoint.data.clkgen?.drivername === null? "warning" : "success"} />
             <ClkgenEndpointDropdown endpoint={adapterEndpoint} event_type="select" fullpath="clkgen/config_file" buttonText={currently_selected ? currently_selected : "None Selected"} >
                 {options}
             </ClkgenEndpointDropdown>
@@ -196,7 +195,7 @@ export function LOKIEnvironment({adapterEndpoint, records_to_render}) {
 }
 
 function LOKIEnvironmentGraph({tempreadings, tempHeaders, humreadings, humHeaders}) {
-    if (tempreadings == null) {
+    if (tempreadings === null || typeof tempreadings === 'undefined') {
         return (<></>)
     }
     return (
@@ -260,12 +259,11 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_state, s
     if (typeof loopstatus !== 'undefined') {
         let loopnames = Object.keys(loopstatus);
         looprows = loopnames.map((loopname) => {
-            let loopinfo = loopstatus[loopname];
             let looprunning = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.running;
             let loopdone = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.done;
             let loopexception = adapterEndpoint.data.carrier_info?.loopstatus[loopname]?.exception;
 
-            if (loopexception != "N/A") {
+            if (loopexception !== "N/A") {
                 loop_exception_found = true;
             };
 
@@ -275,7 +273,7 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_state, s
                     <td>
                         <StatusBadge label={looprunning ? "Running" : ""} type="success" />
                         <StatusBadge label={loopdone ? "Done" : ""} type="warning" />
-                        <StatusBadge label={loopexception == "N/A" ? "" : "ERR: " + loopexception} type="danger" />
+                        <StatusBadge label={loopexception === "N/A" ? "" : "ERR: " + loopexception} type="danger" />
                     </td>
                 </tr>
             )

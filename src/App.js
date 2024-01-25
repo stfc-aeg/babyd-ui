@@ -8,13 +8,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint, ToggleSwitch, OdinGraph, OdinDoubleSlider} from 'odin-react';
 import 'odin-react/dist/index.css'
 
-import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKILEDDisplay, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
+import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image, Modal} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
 import * as Icon from 'react-bootstrap-icons';
 
 import Mermaid from "./Mermaid";
-import mermaid from "mermaid";
 
 const ResetMonitorEndpointButton = WithEndpoint(Button);
 const SyncEndpointToggleSwitch = WithEndpoint(ToggleSwitch);
@@ -52,41 +51,38 @@ function BabyD() {
                     <Col>
                         <Row>
                             <Col>
-                                <BabyD_System_Status adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
+                                <BabyDSystemStatus adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} asic_enabled={asic_enabled} set_asic_enabled={set_asic_enabled} foundLoopException={foundLoopException} />
                             </Col>
                         </Row>
                         <Row xs={1} md={2}>
                             <Col>
-                                <BabyD_Data_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} showgraph={true} />
+                                <BabyDDataConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} showgraph={true} />
                             </Col>
                             <Col>
                                 <Row>
                                     <Col>
-                                        <BabyD_Frame_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                        <BabyDFrameConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
                                     </Col>
                                 </Row>
                                 <Row>
                                     <Col>
-                                        <BabyD_Serialiser_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                        <BabyDSerialiserConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
                                     </Col>
                                 </Row>
                             </Col>
                         </Row>
                         <Row>
                             <Col>
-                                <BabyD_Lane_Config adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                <BabyDLaneConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
                             </Col>
                         </Row>
-                        {/*<Row>
-                            <LOKILEDDisplay adapterEndpoint={periodicEndpoint} />
-                        </Row>*/}
                     </Col>
                     <Col>
                         <Row>
-                            <BabyD_Readout_Image adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
+                            <BabyDReadoutImage adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
                         </Row>
                         <Row>
-                            <BabyD_Readout_Render adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
+                            <BabyDReadoutRender adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled}/>
                         </Row>
                         <Row>
                             <LOKIEnvironment adapterEndpoint={periodicSlowEndpoint}  records_to_render="20" />
@@ -104,12 +100,12 @@ function BabyD() {
                             <LOKIClockGenerator adapterEndpoint={periodicEndpoint} />
                         </Row>
                         <Row>
-                            <BabyD_Timing_Settings adapterEndpoint={periodicSlowEndpoint} asic_enabled={asic_enabled} />
+                            <BabyDTimingSettings adapterEndpoint={periodicSlowEndpoint} asic_enabled={asic_enabled} />
                         </Row>
                     </Col>
                     <Col>
                         <Row>
-                            <BabyD_Bias_Control adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                            <BabyDBiasControl adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
                         </Row>
                         <Row>
                             <LOKICarrierInfo adapterEndpoint={staticEndpoint} loki_connection_state={loki_connection_ok}/>
@@ -126,7 +122,7 @@ function BabyD() {
 
 const MainEndpointButton = WithEndpoint(Button);
 const InitialisedEndpointButton = WithEndpoint(Button);
-function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabled, set_asic_enabled, foundLoopException}) {
+function BabyDSystemStatus({adapterEndpoint, loki_connection_state, asic_enabled, set_asic_enabled, foundLoopException}) {
 
     let latest_asic_enabled = adapterEndpoint.data.application?.system_state?.ASIC_EN;
     if (latest_asic_enabled) {
@@ -245,7 +241,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
                                     </Row>
                                 </Card.Text>
                                 <Card.Footer>
-                                    <BabyD_Device_Init_Badges adapterEndpoint={adapterEndpoint} hide_init_done={true}/>
+                                    <BabyDDeviceInitBadges adapterEndpoint={adapterEndpoint} hide_init_done={true}/>
                                 </Card.Footer>
                             </Card.Body>
                         </Card>
@@ -257,7 +253,7 @@ function BabyD_System_Status({adapterEndpoint, loki_connection_state, asic_enabl
 }
 
 
-function BabyD_Device_Init_Badges({adapterEndpoint, hide_init_done=true}) {
+function BabyDDeviceInitBadges({adapterEndpoint, hide_init_done=true}) {
     let devices = {
         'FireFly' : 'FIREFLY',
         'DAC u1' : 'DAC_U1',
@@ -276,7 +272,7 @@ function BabyD_Device_Init_Badges({adapterEndpoint, hide_init_done=true}) {
             console.log('device key', device_key);
             return (
                 <Col>
-                    {(device_state != 'initialised' || !hide_init_done) && <StatusBadge label={device_name + " "  + device_state} type={device_state == "initialised" ? "success" : "danger"}/>}
+                    {(device_state !== 'initialised' || !hide_init_done) && <StatusBadge label={device_name + " "  + device_state} type={device_state === "initialised" ? "success" : "danger"}/>}
                 </Col>
             )
         });
@@ -291,17 +287,11 @@ function BabyD_Device_Init_Badges({adapterEndpoint, hide_init_done=true}) {
     }
 }
 
-function BabyD_Main_Control({periodicEndpoint}) {
-    // This should be the main component used to bring up the system. It should clearly indicate current state,
-    // and if possible make obvious what next steps should be. Intuitiveness is key. The user should KNOW when
-    // it's safe to power down etc just by glancing at it, and KNOW what to click next.
-}
-
-const FIFO_input_Dropdown = WithEndpoint(DropdownSelector);
-const Aurora_input_Dropdown = WithEndpoint(DropdownSelector);
-const Output_Dropdown = WithEndpoint(DropdownSelector);
-const PRBS_len_Dropdown = WithEndpoint(DropdownSelector);
-function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
+const FIFOInputDropdown = WithEndpoint(DropdownSelector);
+const AuroraInputDropdown = WithEndpoint(DropdownSelector);
+const OutputDropdown = WithEndpoint(DropdownSelector);
+const PRBSLenDropdown = WithEndpoint(DropdownSelector);
+function BabyDDataConfig({adapterEndpoint, asic_enabled, showgraph=false}) {
     // Show intuitively the configuration of what's being output via the fast data and pixel logic as a flowchart.
     // Also allow configuration of these settings.
     // Also show the full pathway including the carrier board, therefore retimer settings and firefly settings
@@ -321,13 +311,13 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
 
 
             subgraph FIFO
-    ` + ((output_currently_selected == 'aurora' && aurora_currently_selected == 'fifo') ? `
+    ` + ((output_currently_selected === 'aurora' && aurora_currently_selected === 'fifo') ? `
                 fifo{FIFO}
                 style fifo stroke:#333,stroke-width:4px
     ` : `
                 fifo{FIFO}
     `) + `
-    ` + (fifo_currently_selected == 'prbs15' ? `
+    ` + (fifo_currently_selected === 'prbs15' ? `
                 PRBS15 ==> fifo
                 pixel -.-> fifo
     ` : `
@@ -338,14 +328,14 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
 
 
             subgraph PRBS-Select
-    ` + ((output_currently_selected == 'prbs') || (output_currently_selected == 'aurora' && aurora_currently_selected == 'prbs') ? `
+    ` + ((output_currently_selected === 'prbs') || (output_currently_selected === 'aurora' && aurora_currently_selected === 'prbs') ? `
                 prbssel{PRBS<br>SELECT}
                 style prbssel stroke:#333,stroke-width:4px
     ` : `
                 prbssel{PRBS<br>SELECT}
     `) + `
 
-    ` + (prbs_currently_selected == '15' ? `
+    ` + (prbs_currently_selected === '15' ? `
                 PRBS23 -.-> prbssel
                 PRBS15 ==> prbssel
     ` : `
@@ -355,13 +345,13 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
             end
 
             subgraph Aurora
-    ` + (output_currently_selected == 'aurora' ? `
+    ` + (output_currently_selected === 'aurora' ? `
                 aurora{Aurora}
                 style aurora stroke:#333,stroke-width:4px
     ` : `
                 aurora{Aurora}
     `) + `
-    ` + (aurora_currently_selected == 'fifo' ? `
+    ` + (aurora_currently_selected === 'fifo' ? `
                 prbssel -.-> aurora
                 fifo ==> aurora
     ` : `
@@ -370,8 +360,8 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
     `) + `
             end
     ` + (
-    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) + `
-    ` + (output_currently_selected == 'user' ? `
+    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) +
+    (output_currently_selected === 'user' ? `
             style user stroke:#333,stroke-width:4px
     ` : `
     `) + `
@@ -379,11 +369,11 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
             subgraph Output
                 output[Output]
                 style output stroke:#333,stroke-width:4px
-    ` + (output_currently_selected == 'user' ? `
+    ` + (output_currently_selected === 'user' ? `
                 prbssel -...-> output
                 user ==> output
                 aurora -.-> output
-    ` : (output_currently_selected == 'prbs' ? `
+    ` : (output_currently_selected === 'prbs' ? `
                 prbssel ====> output
                 user -.-> output
                 aurora -.-> output
@@ -406,31 +396,31 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
                 <Row>
                     <Col>
                         {/*<StatusBox label="PRBS">{adapterEndpoint.data.application?.pipeline?.prbs_length}</StatusBox>*/}
-                        <PRBS_len_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/prbs_length" buttonText={prbs_currently_selected ? "PRBS Mode: PRBS-" + prbs_currently_selected: "None selected"} variant='info' >
+                        <PRBSLenDropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/prbs_length" buttonText={prbs_currently_selected ? "PRBS Mode: PRBS-" + prbs_currently_selected: "None selected"} variant='info' >
                             <Dropdown.Item eventKey={15}>PRBS-15</Dropdown.Item>
                             <Dropdown.Item eventKey={23}>PRBS-23</Dropdown.Item>
-                        </PRBS_len_Dropdown>
+                        </PRBSLenDropdown>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <FIFO_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/fifo_in_mux" buttonText={fifo_currently_selected ? "FIFO In: " + fifo_currently_selected: "None selected"} >
+                        <FIFOInputDropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/fifo_in_mux" buttonText={fifo_currently_selected ? "FIFO In: " + fifo_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="prbs15">prbs15</Dropdown.Item>
                             <Dropdown.Item eventKey="pixel">pixel</Dropdown.Item>
-                        </FIFO_input_Dropdown>
+                        </FIFOInputDropdown>
                     </Col>
                     <Col>
-                        <Aurora_input_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/aurora_in_mux" buttonText={aurora_currently_selected ? "Aurora In: " + aurora_currently_selected: "None selected"} >
+                        <AuroraInputDropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/aurora_in_mux" buttonText={aurora_currently_selected ? "Aurora In: " + aurora_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="fifo">fifo</Dropdown.Item>
                             <Dropdown.Item eventKey="prbs">prbs</Dropdown.Item>
-                        </Aurora_input_Dropdown>
+                        </AuroraInputDropdown>
                     </Col>
                     <Col>
-                        <Output_Dropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/output_mux" buttonText={output_currently_selected ? "Output: " + output_currently_selected: "None selected"} >
+                        <OutputDropdown endpoint={adapterEndpoint} event_type="select" fullpath="application/pipeline/output_mux" buttonText={output_currently_selected ? "Output: " + output_currently_selected: "None selected"} >
                             <Dropdown.Item eventKey="prbs">prbs</Dropdown.Item>
                             <Dropdown.Item eventKey="aurora">aurora</Dropdown.Item>
                             <Dropdown.Item eventKey="user">user</Dropdown.Item>
-                        </Output_Dropdown>
+                        </OutputDropdown>
                     </Col>
                     <Col>
                     </Col>
@@ -448,7 +438,7 @@ function BabyD_Data_Config({adapterEndpoint, asic_enabled, showgraph=false}) {
 }
 
 const EndpointRowSelectSlider = WithEndpoint(OdinDoubleSlider);
-function BabyD_Frame_Config({adapterEndpoint, asic_enabled}) {
+function BabyDFrameConfig({adapterEndpoint, asic_enabled}) {
     // Show intuitively the configuration of what's being output via the fast data and pixel logic as a flowchart.
     // Also allow configuration of these settings.
     // Also show the full pathway including the carrier board, therefore retimer settings and firefly settings
@@ -476,9 +466,8 @@ function BabyD_Frame_Config({adapterEndpoint, asic_enabled}) {
     }
 }
 
-const SerialiserHalfrateButton = WithEndpoint(Button);
 const SerialiserHalfrateToggleSwitch = WithEndpoint(ToggleSwitch);
-function BabyD_Serialiser_Config({adapterEndpoint, asic_enabled}) {
+function BabyDSerialiserConfig({adapterEndpoint, asic_enabled}) {
     let halfrate_en = adapterEndpoint?.data?.application?.serialiser?.halfrate;
 
     if (asic_enabled) {
@@ -499,12 +488,7 @@ function BabyD_Serialiser_Config({adapterEndpoint, asic_enabled}) {
     }
 }
 
-function BabyD_SPIReadout() {
-    // A basic trigger for SPI readout, with in-browser heatmap rendering.
-    // Potentially allow configuration of system for multi-frame etc
-}
-
-function BabyD_Timing_Settings({adapterEndpoint, asic_enabled}) {
+function BabyDTimingSettings({adapterEndpoint, asic_enabled}) {
     // Intuitively display the current timing settings
 
     if (!asic_enabled) {
@@ -552,7 +536,7 @@ function BabyD_Timing_Settings({adapterEndpoint, asic_enabled}) {
 
 const VDACReadbackButton = WithEndpoint(Button);
 const IDACReadbackButton = WithEndpoint(Button);
-function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
+function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
     // Allow configuration of DACs, ADCs, both internal and external (bias settings).
     // Visually demonstrate where sources of signals are.
     if (!asic_enabled) {
@@ -586,7 +570,7 @@ function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
                             {source_select && <StatusBox label="Source Select">{source_select}</StatusBox>}
                         </Col>
                         <Col>
-                            {source_select == 'internal' && <StatusBox label="Internal Count">{bias_info[bias_name]?.sources?.internal?.count}</StatusBox>}
+                            {source_select === 'internal' && <StatusBox label="Internal Count">{bias_info[bias_name]?.sources?.internal?.count}</StatusBox>}
                         </Col>
                     </Row>
                 </TitleCard>
@@ -620,16 +604,7 @@ function BabyD_Bias_Control({adapterEndpoint, asic_enabled}) {
 
 }
 
-function BabyD_RegisterAccess() {
-    // Simple UI element to read and write ASIC registers. Potentially a table or just
-    // simple form? This will not be synchronous in any way, but could be quite useful.
-    // This should also somehow make use of the field-based system for browsing register
-    // mappings, as these should make things intuitive.
-    // Consider efficient access, and whether this will end up spamming requests to the
-    // ASIC where bits are volatile.
-}
-
-function BabyD_Readout_Image({adapterEndpoint, asic_enabled}) {
+function BabyDReadoutImage({adapterEndpoint, asic_enabled}) {
     let image_source = adapterEndpoint.data?.application?.readout?.imgout;
 
     if (!asic_enabled) {
@@ -651,7 +626,7 @@ function BabyD_Readout_Image({adapterEndpoint, asic_enabled}) {
     }
 }
 
-function BabyD_Readout_Render({adapterEndpoint, asic_enabled}) {
+function BabyDReadoutRender({adapterEndpoint, asic_enabled}) {
     let image_dat_fine = adapterEndpoint.data?.application?.readout?.imgdat_fine;
     let image_dat_coarse = adapterEndpoint.data?.application?.readout?.imgdat_coarse;
     let image_dat_combined = adapterEndpoint.data?.application?.readout?.imgdat_combined;
@@ -660,7 +635,7 @@ function BabyD_Readout_Render({adapterEndpoint, asic_enabled}) {
         return (<></>);
     }
 
-    if ((typeof image_dat_fine !== 'undefined' && image_dat_fine != null) && (typeof image_dat_coarse !== 'undefined' || image_dat_coarse != null) && (typeof image_dat_combined !== 'undefined' && image_dat_combined != null)) {
+    if ((typeof image_dat_fine !== 'undefined' && image_dat_fine !== null) && (typeof image_dat_coarse !== 'undefined' || image_dat_coarse !== null) && (typeof image_dat_combined !== 'undefined' && image_dat_combined !== null)) {
 
         return (
             <TitleCard title='Readout Render'>
@@ -683,7 +658,7 @@ function BabyD_Readout_Render({adapterEndpoint, asic_enabled}) {
     }
 }
 
-function BabyD_Lane_Config({adapterEndpoint, asic_enabled}) {
+function BabyDLaneConfig({adapterEndpoint, asic_enabled}) {
     // This will combine firefly and retimer controls for given lanes.
     if (!asic_enabled) {
         return (<></>);
@@ -708,10 +683,10 @@ function BabyD_Lane_Config({adapterEndpoint, asic_enabled}) {
                         <StatusBadge label={ff_en ? 'Enabled' : 'Disabled'} type={ff_en ? 'success' : 'danger'}/>
                     </td>
                     <td>
-                        <StatusBadge label={retimer_lock == null ? '' : (retimer_lock ? 'Locked' : 'No')} type={retimer_lock ? 'success' : 'danger'}/>
+                        <StatusBadge label={retimer_lock === null ? '' : (retimer_lock ? 'Locked' : 'No')} type={retimer_lock ? 'success' : 'danger'}/>
                     </td>
                     <td>
-                        <StatusBadge label={retimer_passthrough == null ? '' : (retimer_passthrough ? 'Yes' : 'No')} type={retimer_passthrough ? 'success' : 'danger'}/>
+                        <StatusBadge label={retimer_passthrough === null ? '' : (retimer_passthrough ? 'Yes' : 'No')} type={retimer_passthrough ? 'success' : 'danger'}/>
                     </td>
                 </tr>
             )
