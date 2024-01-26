@@ -61,3 +61,6 @@ jobs:
         allowUpdates: true
         updateOnlyUnreleased: true
         omitBodyDuringUpdate: true
+
+        # Make sure the release created is acutally associated with the tag properly
+        tag: ${GITHUB_REF#refs/*/}
