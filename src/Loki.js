@@ -1,7 +1,9 @@
 import React from 'react';
 
-import {DropdownSelector, WithEndpoint, TitleCard, OdinGraph} from 'odin-react';
-import {Dropdown, Row, Alert} from 'react-bootstrap';
+import {DropdownSelector, WithEndpoint, TitleCard, OdinGraph, StatusBox} from 'odin-react';
+import {Dropdown, Row, Col, Alert} from 'react-bootstrap';
+
+import Mermaid from "./Mermaid";
 
 const ClkgenEndpointDropdown = WithEndpoint(DropdownSelector);
 
@@ -298,6 +300,102 @@ export function LOKICarrierTaskStatus({adapterEndpoint, loki_connection_state, s
                         {looprows}
                     </tbody>
                 </table>
+            </Row>
+        </TitleCard>
+    )
+}
+
+export function LOKIPerformanceDisplay({adapterEndpoint, show_cpu=true, show_cpu_times=true}) {
+
+    let perfinfo = adapterEndpoint.data.carrier_info?.performance;
+    console.log('performance info:', perfinfo);
+
+    return (
+        <TitleCard title="LOKI Performance">
+            <Row>
+                {show_cpu && <Col><LOKICPUInfo cpuInfo={perfinfo?.cpu} show_cpu_times={show_cpu_times}/></Col>}
+            </Row>
+            <Row>
+                {show_cpu && <Col><LOKIMemInfo memInfo={perfinfo?.mem} /></Col>}
+            </Row>
+        </TitleCard>
+    )
+}
+
+function LOKICPUInfo({cpuInfo, show_cpu_times=true, show_cpu_times_graph=false}) {
+
+    if (cpuInfo === null || typeof cpuInfo === 'undefined') {
+        return (<></>)
+    }
+    console.log('cpu info: ', cpuInfo);
+
+    let cputimechart = `
+    pie showData
+        title Times
+    ` + Object.keys(cpuInfo.times).map((timename) => {
+        if (cpuInfo.times[timename] != 0) {
+            return (`
+                "${timename}" : ${cpuInfo.times[timename]}
+            `)
+        } else {
+            return (``)
+        }
+    }).join('') + `
+    `
+
+    return(
+        <TitleCard title="LOKI CPU Info">
+            <Row>
+                <Col>
+                    <StatusBox label="CPU Load">{cpuInfo?.load}</StatusBox>
+                </Col>
+                <Col>
+                    <StatusBox label="CPU Perc">{cpuInfo?.percent + "%"}</StatusBox>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                <TitleCard title="CPU Times">
+                    <Row>
+                        {Object.keys(cpuInfo.times).map((timename) => {
+                            return (
+                                <Col>
+                                    <StatusBox label={timename}>{cpuInfo.times[timename]}</StatusBox>
+                                </Col>
+                            )
+                        })}
+                    </Row>
+                </TitleCard>
+                </Col>
+            </Row>
+            <Row>
+                {show_cpu_times_graph && <Mermaid chart={cputimechart} uid={"lokicputimechart"} />}
+            </Row>
+        </TitleCard>
+    )
+}
+
+function LOKIMemInfo({memInfo}) {
+    if (memInfo === null || typeof memInfo === 'undefined') {
+        return (<></>)
+    }
+    console.log('mem info: ', memInfo);
+
+    return(
+        <TitleCard title="LOKI Memory Info">
+            <Row>
+                <Col>
+                    <StatusBox label="Total">{Math.round(memInfo?.total/1000000) + "MB"}</StatusBox>
+                </Col>
+                <Col>
+                    <StatusBox label="Available">{Math.round(memInfo?.avail/1000000) + "MB"}</StatusBox>
+                </Col>
+                <Col>
+                    <StatusBox label="Cached">{Math.round(memInfo?.cached/1000000) + "MB"}</StatusBox>
+                </Col>
+                <Col>
+                    <StatusBox label="Free">{Math.round(memInfo?.free/1000000) + "MB"}</StatusBox>
+                </Col>
             </Row>
         </TitleCard>
     )
