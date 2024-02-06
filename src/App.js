@@ -10,7 +10,7 @@ import 'odin-react/dist/index.css'
 
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKIEnvironment, LOKICarrierTaskStatus, LOKIPerformanceDisplay} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image, Accordion} from 'react-bootstrap'
 import * as Icon from 'react-bootstrap-icons';
 
 import Mermaid from "./Mermaid";
@@ -238,8 +238,15 @@ function BabyDSystemStatus({adapterEndpoint, loki_connection_state, asic_enabled
                                         <Col>
                                             {latest_main_enable && <StatusBadge label={adapterEndpoint.data.application?.system_state?.SYNC ? "ASIC SYNC High" : "ASIC SYNC Low"} type={adapterEndpoint.data.application?.system_state?.SYNC ? "success" : "danger"}/>}
                                         </Col>
+                                    </Row>
+                                    <Row>
                                         <Col>
                                             <SyncEndpointToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Manual SYNC" fullpath="application/system_state/SYNC" checked={adapterEndpoint.data.application?.system_state?.SYNC} value={adapterEndpoint.data.application?.system_state?.SYNC} />
+                                        </Col>
+                                    </Row>
+                                    <Row>
+                                        <Col>
+                                            <BabyDCacheHits adapterEndpoint={adapterEndpoint} asic_enabled={asic_enabled} />
                                         </Col>
                                     </Row>
                                 </Card.Text>
@@ -717,6 +724,71 @@ function BabyDLaneConfig({adapterEndpoint, asic_enabled}) {
             </Row>
         </TitleCard>
     )
+}
+
+const CacheEnEndpointToggleSwitch = WithEndpoint(ToggleSwitch);
+function BabyDCacheHits({adapterEndpoint, asic_enabled}) {
+
+    if (!asic_enabled) {
+        return (<></>);
+    }
+
+    let cache_info = adapterEndpoint.data?.application?.info?.asic_cache_hitrate;
+
+    console.log('cache info', cache_info);
+
+    let cache_toggleswitch = (<>
+            <Col>
+                <CacheEnEndpointToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Allow Register Cache" fullpath="application/info/asic_cache_allowed" checked={adapterEndpoint.data.application?.info?.asic_cache_allowed} value={adapterEndpoint.data.application?.info?.asic_cache_allowed} />
+                <Row>
+                <Col>
+                {(adapterEndpoint.data.application?.info?.asic_cache_allowed !== adapterEndpoint.data.application?.info?.asic_cache_enabled) && <StatusBox>Note: change will not take effect until ASIC is re-initialised</StatusBox>}
+                </Col>
+                </Row>
+            </Col>
+    </>);
+
+    let cache_info_accordion;
+    if (adapterEndpoint.data.application?.info?.asic_cache_enabled) {
+        cache_info_accordion = (<>
+            <Accordion defaultActiveKey="0">
+                <Accordion.Item eventKey="0">
+                    <Accordion.Header>
+                        Cache Stats
+                    </Accordion.Header>
+                    <Accordion.Body>
+                        <Row>
+                            <Col>
+                                <StatusBox label='Rate'>{(cache_info.hitrate * 100).toFixed(2) + '%'}</StatusBox>
+                            </Col>
+                            <Col>
+                                <StatusBox label='Hits'>{cache_info.hits}</StatusBox>
+                            </Col>
+                            <Col>
+                                <StatusBox label='Misses'>{cache_info.misses}</StatusBox>
+                            </Col>
+                        </Row>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>
+        </>);
+    } else {
+        cache_info_accordion = (<></>);
+    }
+
+
+    if (typeof cache_info !== 'undefined' ) {
+        return (<>
+            <Row>
+                {cache_toggleswitch}
+            </Row>
+            <Row>
+                {cache_info_accordion}
+            </Row>
+        </>)
+    } else {
+        return (<></>)
+    }
 }
 
 export default BabyD;
