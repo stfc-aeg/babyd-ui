@@ -333,7 +333,7 @@ function LOKICPUInfo({cpuInfo, show_cpu_times=true, show_cpu_times_graph=false})
     pie showData
         title Times
     ` + Object.keys(cpuInfo.times).map((timename) => {
-        if (cpuInfo.times[timename] != 0) {
+        if (cpuInfo.times[timename] !== 0) {
             return (`
                 "${timename}" : ${cpuInfo.times[timename]}
             `)
