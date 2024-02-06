@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {OdinApp, StatusBox, useAdapterEndpoint, TitleCard, DropdownSelector, WithEndpoint, ToggleSwitch, OdinGraph, OdinDoubleSlider} from 'odin-react';
 import 'odin-react/dist/index.css'
 
-import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKIEnvironment, LOKICarrierTaskStatus} from './Loki.js'
+import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKIEnvironment, LOKICarrierTaskStatus, LOKIPerformanceDisplay} from './Loki.js'
 
 import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image} from 'react-bootstrap'
 import * as Icon from 'react-bootstrap-icons';
@@ -98,6 +98,9 @@ function BabyD() {
                     <Col>
                         <Row>
                             <LOKIClockGenerator adapterEndpoint={periodicEndpoint} />
+                        </Row>
+                        <Row>
+                            <LOKIPerformanceDisplay adapterEndpoint={periodicEndpoint} />
                         </Row>
                         <Row>
                             <BabyDTimingSettings adapterEndpoint={periodicSlowEndpoint} asic_enabled={asic_enabled} />
