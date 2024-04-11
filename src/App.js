@@ -570,10 +570,14 @@ function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
             return (
                 <TitleCard title={bias_name}>
                     <Row>
-                        {voltage_readback && <StatusBox label="Voltage Readback">{voltage_readback.toFixed(3)}</StatusBox>}
+                        <Col>
+                            {voltage_readback && <StatusBox label="Voltage Readback">{voltage_readback.toFixed(3)}</StatusBox>}
+                        </Col>
                     </Row>
                     <Row>
-                        {current_calc && <StatusBox label="Calc Current (experimental) (mA)">{(current_calc*1000).toFixed(3)}</StatusBox>}
+                        <Col>
+                            {current_calc && <StatusBox label="Calc Current (experimental) (mA)">{(current_calc*1000).toFixed(3)}</StatusBox>}
+                        </Col>
                     </Row>
                     <Row>
                         <Col>
