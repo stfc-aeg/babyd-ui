@@ -595,7 +595,7 @@ function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
                     <Col>
                         <StatusBox label="VDAC Readback">{bias_info?.readback_enable?.VDAC}</StatusBox>
                         <VDACReadbackButton endpoint={adapterEndpoint} event_type="click" fullpath="application/bias_settings/readback_enable/VDAC" value={!(bias_info?.readback_enable?.VDAC)} variant={bias_info?.readback_enable?.VDAC ? 'danger' : 'primary'}>
-                        IDAC Readback EN
+                        VDAC Readback EN
                         </VDACReadbackButton>
                     </Col>
                     <Col>
