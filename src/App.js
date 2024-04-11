@@ -559,14 +559,14 @@ function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
     // there are keys on the same level as bias names that are not biases, which would make the
     // handlind complicated. However, some generation is still automatic, as the bias sources and
     // available readout depends on the setup.
-    let bias_names = ['VREFAMP', 'VOUTTH1', 'VOUTTH2', 'IDACCAL', 'IDACCANCEL1', 'IDACCANCEL2', 'VDACREF', 'LDOREF', 'IDACREF', 'COMPAMPBUFFBIAS', 'DIODE'];
+    let bias_names = Object.keys((bias_info?.BIASES !== undefined ? bias_info?.BIASES : []));
 
     let bias_rows;
     if (typeof bias_info !== 'undefined') {
         bias_rows = bias_names.map((bias_name) => {
-            let voltage_readback = bias_info[bias_name]?.voltage_readback;
-            let current_calc = bias_info[bias_name]?.current_calc;
-            let source_select = bias_info[bias_name]?.source_select;
+            let voltage_readback = bias_info.BIASES[bias_name]?.voltage_readback;
+            let current_calc = bias_info.BIASES[bias_name]?.current_calc;
+            let source_select = bias_info.BIASES[bias_name]?.source_select;
             return (
                 <TitleCard title={bias_name}>
                     <Row>
