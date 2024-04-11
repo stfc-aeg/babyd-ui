@@ -544,8 +544,8 @@ function BabyDTimingSettings({adapterEndpoint, asic_enabled}) {
     )
 }
 
-const VDACReadbackButton = WithEndpoint(Button);
-const IDACReadbackButton = WithEndpoint(Button);
+const VDACReadbackToggleSwitch = WithEndpoint(ToggleSwitch);
+const IDACReadbackToggleSwitch = WithEndpoint(ToggleSwitch);
 function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
     // Allow configuration of DACs, ADCs, both internal and external (bias settings).
     // Visually demonstrate where sources of signals are.
@@ -580,7 +580,7 @@ function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
                             {source_select && <StatusBox label="Source Select">{source_select}</StatusBox>}
                         </Col>
                         <Col>
-                            {source_select === 'internal' && <StatusBox label="Internal Count">{bias_info[bias_name]?.sources?.internal?.count}</StatusBox>}
+                            {source_select === 'internal' && <StatusBox label="Internal Count">{bias_info.BIASES[bias_name]?.sources?.internal?.count}</StatusBox>}
                         </Col>
                     </Row>
                 </TitleCard>
@@ -593,17 +593,13 @@ function BabyDBiasControl({adapterEndpoint, asic_enabled}) {
             <TitleCard title="Bias Information">
                 <Row>
                     <Col>
-                        <StatusBox label="VDAC Readback">{bias_info?.readback_enable?.VDAC}</StatusBox>
-                        <VDACReadbackButton endpoint={adapterEndpoint} event_type="click" fullpath="application/bias_settings/readback_enable/VDAC" value={!(bias_info?.readback_enable?.VDAC)} variant={bias_info?.readback_enable?.VDAC ? 'danger' : 'primary'}>
-                        VDAC Readback EN
-                        </VDACReadbackButton>
+                        <VDACReadbackToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Enable VDAC Readback" fullpath="application/bias_settings/readback_enable/VDAC" checked={bias_info?.readback_enable?.VDAC} value={bias_info?.readback_enable?.VDAC} />
                     </Col>
                     <Col>
-                        <StatusBox label="IDAC Readback">{bias_info?.readback_enable?.IDAC}</StatusBox>
-                        <IDACReadbackButton endpoint={adapterEndpoint} event_type="click" fullpath="application/bias_settings/readback_enable/IDAC" value={!(bias_info?.readback_enable?.IDAC)} variant={bias_info?.readback_enable?.IDAC ? 'danger' : 'primary'}>
-                        IDAC Readback EN
-                        </IDACReadbackButton>
+                        <IDACReadbackToggleSwitch endpoint={adapterEndpoint} event_type="click" label="Enable IDAC Readback" fullpath="application/bias_settings/readback_enable/IDAC" checked={bias_info?.readback_enable?.IDAC} value={bias_info?.readback_enable?.IDAC} />
                     </Col>
+                </Row>
+                <Row>
                     <Col>
                         {bias_rows}
                     </Col>
