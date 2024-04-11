@@ -10,7 +10,7 @@ import 'odin-react/dist/index.css'
 
 import {StatusBadge, LOKIConnectionAlert, LOKIClockGenerator, LOKICarrierInfo, LOKIEnvironment, LOKICarrierTaskStatus, LOKIPerformanceDisplay} from './Loki.js'
 
-import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image, Accordion} from 'react-bootstrap'
+import {Row, Col, Container, Dropdown, Card, Alert, Button, Spinner, Image, Accordion, Toast, ToastContainer} from 'react-bootstrap'
 import * as Icon from 'react-bootstrap-icons';
 
 import Mermaid from "./Mermaid";
@@ -28,6 +28,9 @@ function BabyD() {
 
     const [foundLoopException, setFoundLoopException] = useState(false);
 
+    const [readout_row_low, set_readout_row_low] = useState(null);
+    const [readout_row_high, set_readout_row_high] = useState(null);
+
     return (
         <OdinApp title="BabyD UI" navLinks={["BabyD Control", "Debug Info"]}>
             <Container fluid>
@@ -39,6 +42,7 @@ function BabyD() {
                         </ResetMonitorEndpointButton>
                     </div>
                 </Alert>
+                <BabyDFrameRowWarning adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} readout_row_low={readout_row_low} readout_row_high={readout_row_high}/>
                 <Row>
                     <LOKIConnectionAlert adapterEndpoint={periodicEndpoint} loki_connection_state={loki_connection_ok} set_loki_connection_state={set_loki_connection_ok} />
                 </Row>
@@ -61,7 +65,8 @@ function BabyD() {
                             <Col>
                                 <Row>
                                     <Col>
-                                        <BabyDFrameConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} />
+                                        <BabyDFrameConfig adapterEndpoint={periodicEndpoint} asic_enabled={asic_enabled} readout_row_low={readout_row_low} readout_row_high={readout_row_high} set_readout_row_low={set_readout_row_low} set_readout_row_high={set_readout_row_high}/>
+
                                     </Col>
                                 </Row>
                                 <Row>
@@ -448,13 +453,13 @@ function BabyDDataConfig({adapterEndpoint, asic_enabled, showgraph=false}) {
 }
 
 const EndpointRowSelectSlider = WithEndpoint(OdinDoubleSlider);
-function BabyDFrameConfig({adapterEndpoint, asic_enabled}) {
+function BabyDFrameConfig({adapterEndpoint, asic_enabled, readout_row_low, readout_row_high, set_readout_row_low, set_readout_row_high}) {
     // Show intuitively the configuration of what's being output via the fast data and pixel logic as a flowchart.
     // Also allow configuration of these settings.
     // Also show the full pathway including the carrier board, therefore retimer settings and firefly settings
 
-    let current_low = adapterEndpoint.data?.application?.readout?.row_range[0];
-    let current_high = adapterEndpoint.data?.application?.readout?.row_range[1];
+    set_readout_row_low(adapterEndpoint.data?.application?.readout?.row_range[0]);
+    set_readout_row_high(adapterEndpoint.data?.application?.readout?.row_range[1]);
 
     if (asic_enabled) {
         return (
@@ -463,13 +468,32 @@ function BabyDFrameConfig({adapterEndpoint, asic_enabled}) {
                     <Col>
                         Frame Row Range:
                         &nbsp;
-                        <StatusBadge label={current_low + ' - ' + current_high} />
+                        <StatusBadge label={readout_row_low + ' - ' + readout_row_high} />
                     </Col>
                 </Row>
                 <Row>
-                    <EndpointRowSelectSlider min={0} max={15} steps={1} title="Row Select" showTitle={true} low={current_low} high={current_high} endpoint={adapterEndpoint} event_type="change" delay={0} fullpath="application/readout/row_range" />
+                    <EndpointRowSelectSlider min={0} max={15} steps={1} title="Row Select" showTitle={true} low={readout_row_low} high={readout_row_high} endpoint={adapterEndpoint} event_type="change" delay={0} fullpath="application/readout/row_range" />
                 </Row>
             </TitleCard>
+        )
+    } else {
+        return (<></>)
+    }
+}
+
+function BabyDFrameRowWarning({adapterEndopint, asic_enabled, readout_row_low, readout_row_high}) {
+    if (asic_enabled && (readout_row_low !== 0 || readout_row_high !== 15)) {
+        return (
+            <ToastContainer className="position-relative">
+                <Toast>
+                    <Toast.Header>
+                    header
+                    </Toast.Header>
+                    <Toast.Body>
+                    Body
+                    </Toast.Body>
+                </Toast>
+            </ToastContainer>
         )
     } else {
         return (<></>)
