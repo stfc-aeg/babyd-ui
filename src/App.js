@@ -310,6 +310,7 @@ function BabyDDataConfig({adapterEndpoint, asic_enabled, showgraph=false}) {
     let aurora_currently_selected = adapterEndpoint.data.application?.pipeline?.aurora_in_mux;
     let output_currently_selected = adapterEndpoint.data.application?.pipeline?.output_mux;
     let prbs_currently_selected = adapterEndpoint.data.application?.pipeline?.prbs_length;
+    let user_pattern = adapterEndpoint.data.application?.pipeline?.user_pattern;
 
     let merchart = `
         flowchart LR
@@ -370,7 +371,7 @@ function BabyDDataConfig({adapterEndpoint, asic_enabled, showgraph=false}) {
     `) + `
             end
     ` + (
-    `       user[User Pattern<br>` + adapterEndpoint.data.application?.pipeline?.user_pattern + `<br>0x` + adapterEndpoint.data.application?.pipeline?.user_pattern.toString(16) +`]`) +
+    `       user[User Pattern<br>` + user_pattern + `<br>0x` + (user_pattern === null || user_pattern === undefined ? '' : user_pattern.toString(16)) +`]`) +
     (output_currently_selected === 'user' ? `
             style user stroke:#333,stroke-width:4px
     ` : `
