@@ -18,10 +18,9 @@ import Mermaid from "./Mermaid";
 const ResetMonitorEndpointButton = WithEndpoint(Button);
 const SyncEndpointToggleSwitch = WithEndpoint(ToggleSwitch);
 function BabyD() {
-    const periodicEndpoint = useAdapterEndpoint("detector", "", 1000);
-    const staticEndpoint = useAdapterEndpoint("detector");
-    const periodicSlowEndpoint = useAdapterEndpoint("detector", "", 5000);
-    //const periodicDetectorEndpoint = useAdapterEndpoint("detector", "http://localhost:3000", 200);
+    const periodicEndpoint = useAdapterEndpoint("detector", process.env.REACT_APP_ENDPOINT_URL, 1000);
+    const staticEndpoint = useAdapterEndpoint("detector", process.env.REACT_APP_ENDPOINT_URL);
+    const periodicSlowEndpoint = useAdapterEndpoint("detector", process.env.REACT_APP_ENDPOINT_URL, 5000);
 
     const [loki_connection_ok, set_loki_connection_ok] = useState(true);
     const [asic_enabled, set_asic_enabled] = useState(false);
